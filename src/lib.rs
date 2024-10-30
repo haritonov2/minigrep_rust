@@ -1,9 +1,12 @@
 use std::error::Error;
-use std::fs;
+use std::{env, fs};
+
+const IGNORE_CASE: &str = "IGNORE_CASE";
 
 pub struct Config<'a> {
     pub query: &'a str,
     pub file_path: &'a str,
+    pub ignore_case: bool,
 }
 
 impl<'a> Config<'a> {
@@ -14,9 +17,12 @@ impl<'a> Config<'a> {
 
         let query = &args[1];
         let file_path = &args[2];
+        let ignore_case = env::var(IGNORE_CASE).is_ok();
+
         let config = Self {
             query,
             file_path,
+            ignore_case,
         };
 
         Ok(config)
@@ -26,7 +32,13 @@ impl<'a> Config<'a> {
 pub fn run (config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
 
-    for line in search(&config.query, &contents) {
+    let result = if config.ignore_case {
+        search_case_insensitive(&config.query, &contents)
+    } else {
+        search(&config.query, &contents)
+    };
+
+    for line in result {
         println!("{line}");
     }
 
