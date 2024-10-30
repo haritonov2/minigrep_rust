@@ -17,7 +17,15 @@ impl<'a> Config<'a> {
 
         let query = &args[1];
         let file_path = &args[2];
-        let ignore_case = env::var(IGNORE_CASE).is_ok();
+        let mut ignore_case = env::var(IGNORE_CASE).is_ok();
+
+        if args.len() > 3 {
+            ignore_case = match args[3].to_lowercase().as_str() {
+                "true" => true,
+                "false" => false,
+                _ => ignore_case,
+            };
+        }
 
         let config = Self {
             query,
